@@ -10,6 +10,7 @@ using System.IO;
 using System.Threading;
 using Google.Apis.Util.Store;
 using Google.Apis.Services;
+using MyDriveStream.Models;
 
 namespace MyDriveStream.Controllers
 {
@@ -21,7 +22,8 @@ namespace MyDriveStream.Controllers
         private static string ApplicationName = "MyDriveStream";
 
         [HttpGet]
-        public IEnumerable<Google.Apis.Drive.v3.Data.File> GetFiles()
+        [Route(nameof(GetFiles))]
+        public async Task<IList<DriveFile>> GetFiles()
         {
             UserCredential credential;
 
@@ -49,15 +51,23 @@ namespace MyDriveStream.Controllers
             // Define parameters of request.
             FilesResource.ListRequest listRequest = service.Files.List();
             listRequest.PageSize = 10;
-            listRequest.Fields = "nextPageToken, files(id, name)";
+            listRequest.Fields = "nextPageToken, files(id, name, thumbnailLink, owners)";
+            listRequest.Q = "mimeType='video/mp4'";
 
             // List files.
-            IList<Google.Apis.Drive.v3.Data.File> files = listRequest.Execute().Files;
-            if (files != null && files.Count > 0)
-            {
-                return files;
-            }
-            else return new List<Google.Apis.Drive.v3.Data.File>();
+            var files = await listRequest.ExecuteAsync();
+
+            List<DriveFile> fileList = files.Files.Where(f => f.Owners[0].Me == true).Select(
+                    e => new DriveFile()
+                    {
+                        FileID = e.Id,
+                        Name = e.Name,
+                        Thumbnail = e.ThumbnailLink
+                    }).ToList();
+
+            if (files != null && fileList.Count > 0)
+                return fileList;
+            else return new List<DriveFile>();
         }
     }
 }

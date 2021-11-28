@@ -50,9 +50,9 @@ namespace MyDriveStream.Controllers
 
             // Define parameters of request.
             FilesResource.ListRequest listRequest = service.Files.List();
-            listRequest.PageSize = 10;
+            listRequest.PageSize = 9;
             listRequest.Fields = "nextPageToken, files(id, name, thumbnailLink, owners)";
-            listRequest.Q = "mimeType='video/mp4'";
+            listRequest.Q = "'1_4IULIFNDIRHEzEHkh08uIdTJAOjdFlX' in parents and mimeType='video/mp4'";
 
             // List files.
             var files = await listRequest.ExecuteAsync();
